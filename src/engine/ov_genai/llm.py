@@ -12,7 +12,10 @@ from openvino_genai import (
 )
 from transformers import AutoTokenizer, BatchEncoding
 
-from src.engine.ov_genai.output_parsers import detect_output_format
+from src.engine.ov_genai.output_parsers import (
+    detect_output_format,
+    extract_generated_text,
+)
 from src.server.models.ov_genai import OVGenAI_GenConfig
 from src.server.model_registry import ModelRegistry
 from src.server.models.registration import ModelLoadConfig
@@ -105,7 +108,8 @@ class OVGenAI_LLM:
         
         perf_metrics = result.perf_metrics
         decoder_tokenizer = self.model.get_tokenizer()
-        text = decoder_tokenizer.decode(result.tokens)[0] if getattr(result, "tokens", None) else ""
+        raw_text = decoder_tokenizer.decode(result.tokens)[0] if getattr(result, "tokens", None) else ""
+        text = extract_generated_text(raw_text, self.output_format)
 
         metrics_dict = self.collect_metrics(gen_config, perf_metrics)
         yield metrics_dict
