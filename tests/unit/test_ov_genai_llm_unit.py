@@ -322,8 +322,12 @@ def test_harmony_parser_handles_stripped_decoder_fallback() -> None:
     raw = (
         "analysisUser asks who is president of France. "
         "assistantfinalAs of 2026, the President of France is Emmanuel Macron."
+        "analysisUser asks \"Who is the president of France?\" As of knowledge cutoff 2024-06, president is Emmanuel Macron (since 2017 and re-elected 2022)."
+        "We should mention current president and term. The user didn't specify time context, but presumably now. The assistant should give answer."
+        "Possibly mention current year. Also note that president may change after election 2027? But we are only as of 2024. So answer: Emmanuel Macron."
+        "Provide context. Should be straightforward.assistantfinalThe current President of France is **Emmanuel Macron**."
     )
-    assert extract_harmony_final_text(raw) == "As of 2026, the President of France is Emmanuel Macron."
+    assert extract_harmony_final_text(raw) == "The current President of France is **Emmanuel Macron**."
 
 
 def test_harmony_parser_stops_at_end_marker_too() -> None:
