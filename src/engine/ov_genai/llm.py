@@ -15,6 +15,7 @@ from transformers import AutoTokenizer, BatchEncoding
 from src.engine.ov_genai.output_parsers import (
     detect_output_format,
     extract_generated_text,
+    make_streaming_filter,
 )
 from src.server.models.ov_genai import OVGenAI_GenConfig
 from src.server.model_registry import ModelRegistry
@@ -123,7 +124,11 @@ class OVGenAI_LLM:
 
         generation_kwargs = self.create_generation_config(gen_config)
         decoder_tokenizer = self.model.get_tokenizer()
-        streamer = ChunkStreamer(decoder_tokenizer, gen_config)
+        streamer = ChunkStreamer(
+            decoder_tokenizer,
+            gen_config,
+            text_filter=make_streaming_filter(self.output_format),
+        )
         
         # Track active request and streamer for cancellation
         self._active_request_id = gen_config.request_id
