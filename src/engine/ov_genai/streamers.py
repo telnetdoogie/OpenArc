@@ -23,7 +23,7 @@ class ChunkStreamer(StreamerBase):
         self.since_last_emit: int = 0              # tokens collected since last emit
         self.text_queue: "asyncio.Queue[Optional[str]]" = asyncio.Queue()
         self._cancelled = asyncio.Event()          # cancellation flag for thread-safe signaling
-        self.text_filter = text_filter or PlainStreamingTextFilter
+        self.text_filter = text_filter or PlainStreamingTextFilter()
 
     def write(self, token: Union[int, List[int]]) -> openvino_genai.StreamingStatus:
         # Check for cancellation first
