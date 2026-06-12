@@ -82,6 +82,10 @@ class ModelLoadConfig(BaseModel):
         Device used to load the model.
         """
     )
+    response_format: Optional[str] = Field(
+        default=None,
+        description="Optional response format for the model. Example is harmony"
+    )
     runtime_config: Dict[str, Any] = Field(
         default_factory=dict,
         description="Optional OpenVINO runtime properties.")

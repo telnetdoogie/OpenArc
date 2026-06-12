@@ -12,6 +12,7 @@ from openvino_genai import (
 )
 from transformers import AutoTokenizer, BatchEncoding
 
+from src.engine.ov_genai.output_parsers import detect_output_format
 from src.server.models.ov_genai import OVGenAI_GenConfig
 from src.server.model_registry import ModelRegistry
 from src.server.models.registration import ModelLoadConfig
@@ -281,6 +282,8 @@ class OVGenAI_LLM:
         )
 
         self.encoder_tokenizer = AutoTokenizer.from_pretrained(loader.model_path)
+        self.output_format = detect_output_format(self.encoder_tokenizer, configured=getattr(loader, "response_format", None))
+
         logging.info(f"{loader.model_name} loaded successfully")
 
     async def unload_model(self, registry: ModelRegistry, model_name: str) -> bool:

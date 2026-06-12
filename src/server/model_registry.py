@@ -35,6 +35,7 @@ class ModelRecord:
     model_type: str = ""
     engine: str = ""
     device: str = ""
+    response_format: str = ""
     runtime_config: Dict[str, Any] = field(default_factory=dict)
 
 
@@ -45,6 +46,7 @@ class ModelRecord:
             "model_type": self.model_type,
             "engine": self.engine,
             "device": self.device,
+            "response_format": self.response_format,
             "runtime_config": self.runtime_config,
             "status": self.status.value,
             "time_loaded": self.time_loaded.isoformat(),
@@ -90,6 +92,7 @@ class ModelRegistry:
             model_type=loader.model_type,
             engine=loader.engine,
             device=loader.device,
+            response_format=loader.response_format,
             runtime_config=loader.runtime_config,
             status=ModelStatus.LOADING,
         )
