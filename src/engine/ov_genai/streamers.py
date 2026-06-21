@@ -44,11 +44,7 @@ class ChunkStreamer(StreamerBase):
         if self.since_last_emit >= self.tokens_len:
             text = self.decoder_tokenizer.decode(self.tokens_cache)
             chunk = self.text_filter.filter(text)
-            # Emit only the newly materialized portion
 
-            if chr(65533) in chunk:
-                self.since_last_emit -= 1
-                return openvino_genai.StreamingStatus.RUNNING
             if chunk:
                 self.text_queue.put_nowait(chunk)
 
@@ -65,10 +61,10 @@ class ChunkStreamer(StreamerBase):
         return self._cancelled.is_set()
 
     def end(self) -> None:
-        # Flush any remaining tokens at the end
         text = self.decoder_tokenizer.decode(self.tokens_cache)
         chunk = self.text_filter.filter(text)
+
         if chunk:
             self.text_queue.put_nowait(chunk)
-        # Signal completion
+
         self.text_queue.put_nowait(None)

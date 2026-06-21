@@ -65,39 +65,67 @@ class PlainStreamingTextFilter(StreamingTextFilter):
 
 
 class HarmonyStreamingTextFilter(StreamingTextFilter):
+
+    FINAL_MARKERS = (
+        "<|start|>assistant<|channel|>final<|message|>",
+        "<|channel|>final<|message|>",
+        "assistantfinal",
+    )
+
+    STOP_MARKERS = (
+        "<|return|>",
+        "<|call|>",
+        "<|end|>",
+    )
+
     def __init__(self) -> None:
-        self._seen_final = False
-        self._last_final_len = 0
+        self._final_start: int | None = None
+        self._emitted_until: int | None = None
         self._stopped = False
 
     def filter(self, cumulative_text: str) -> str:
         if self._stopped:
             return ""
 
-        if not self._seen_final:
-            if HARMONY_FINAL_MARKER not in cumulative_text:
+        if self._final_start is None:
+            final_start = self._find_final_start(cumulative_text)
+
+            if final_start is None:
                 return ""
 
-            cumulative_text = cumulative_text.rsplit(HARMONY_FINAL_MARKER, 1)[1]
-            self._seen_final = True
-            self._last_final_len = 0
-        else:
-            # Once final has started, always work from final onward.
-            cumulative_text = cumulative_text.rsplit(HARMONY_FINAL_MARKER, 1)[-1]
+            self._final_start = final_start
+            self._emitted_until = final_start
 
-        for stop in HARMONY_STOP_MARKERS:
-            if stop in cumulative_text:
-                cumulative_text = cumulative_text.split(stop, 1)[0]
+        assert self._final_start is not None
+        assert self._emitted_until is not None
+
+        stop_at = len(cumulative_text)
+
+        for stop_marker in self.STOP_MARKERS:
+            stop_index = cumulative_text.find(stop_marker, self._final_start)
+            if stop_index != -1:
+                stop_at = min(stop_at, stop_index)
                 self._stopped = True
-                break
 
-        if len(cumulative_text) <= self._last_final_len:
+        if stop_at <= self._emitted_until:
             return ""
 
-        chunk = cumulative_text[self._last_final_len:]
-        self._last_final_len = len(cumulative_text)
+        chunk = cumulative_text[self._emitted_until:stop_at]
+
+        # Important: do not advance emitted position if decode is incomplete.
+        if "\ufffd" in chunk:
+            return ""
+
+        self._emitted_until = stop_at
         return chunk
 
+    def _find_final_start(self, cumulative_text: str) -> int | None:
+        for marker in self.FINAL_MARKERS:
+            index = cumulative_text.rfind(marker)
+            if index != -1:
+                return index + len(marker)
+
+        return None
 
 def make_streaming_filter(output_format: OutputFormat) -> StreamingTextFilter:
     if output_format == OutputFormat.HARMONY:
