@@ -55,6 +55,7 @@ def test_register_load_and_unload_flow(patched_model_factory) -> None:
     assert status_loaded["total_loaded_models"] == 1
     assert status_loaded["models"][0]["status"] == "loaded"
     assert status_after["total_loaded_models"] == 0
+    assert False
 
 
 def test_register_load_failure_marks_status(patched_model_factory, monkeypatch: pytest.MonkeyPatch) -> None:
